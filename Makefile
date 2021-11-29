@@ -19,8 +19,9 @@ output:
 .SECONDEXPANSION:
 .PRECIOUS: %.html
 
+H := \#
 PREQ = $(shell a=$@; echo $${a%%/*})
-NEXT = $(shell a=$@; echo $${a#*/})
+NEXT = $(shell a=$@; echo $${a$H*/})
 
 ifndef bundesland
 export ROOTDIR := $(CURDIR)

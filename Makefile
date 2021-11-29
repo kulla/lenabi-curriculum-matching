@@ -1,3 +1,4 @@
+# sachsen
 
 all: output/sachsen-mathematik.json
 
@@ -6,3 +7,32 @@ input/sachsen-mathematik.html:
 
 output/sachsen-%.json: input/sachsen-%.html
 	python3 scraping/sachsen.py < $< > $@
+
+# bayern
+
+.SECONDEXPANSION:
+.PRECIOUS: %.html
+
+PREQ = $(shell a=$@; echo $${a%%/*})
+NEXT = $(shell a=$@; echo $${a#*/})
+
+ifndef bundesland
+export ROOTDIR := $(CURDIR)
+%.html:
+	[ -d $(PREQ) ] || mkdir $(PREQ)
+	$(MAKE) -C $(PREQ) -f $(ROOTDIR)/Makefile $(NEXT) bundesland=$(PREQ)
+else
+ifndef fach
+%.html:
+	[ -d $(PREQ) ] || mkdir $(PREQ)
+	$(MAKE) -C $(PREQ) -f $(ROOTDIR)/Makefile $(NEXT) fach=$(PREQ)
+else
+%.html:
+	case "$$bundesland" in \
+		bayern) curl -L "https://www.lehrplanplus.bayern.de/fachlehrplan/gymnasium/$*/$(fach)" > $@;; \
+		esac
+endif
+endif
+
+%.json: $$(subst -,/,$$*).html
+	python3 scraping/bayern.py $< >$@

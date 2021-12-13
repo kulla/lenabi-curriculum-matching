@@ -1,5 +1,6 @@
 from lxml import html
 import json
+import re
 
 def parseHTML(path):
 
@@ -25,7 +26,54 @@ def parseHTML(path):
                             "competences": competences
                         }
                     )
-    return plan
+    graph = []
+    next_id = 0
+    for toplevel in plan:
+        toplevel_id = next_id
+        next_id += 1
+        toplevel_parts = []
+        for midlevel in plan[toplevel]:
+            midlevel_id = next_id
+            next_id += 1
+            toplevel_parts.append(midlevel_id)
+            midlevel_parts = []
+            for child in midlevel["competences"]:
+                child_id = next_id
+                next_id += 1
+                midlevel_parts.append(child_id)
+                graph.append({
+                    "id": child_id,
+                    "name": None,
+                    "description": child,
+                    "numberOfHours": None,
+                    "isPartOf": [midlevel_id],
+                    "hasPart": []
+                })
+            topic, hours = split_hours(midlevel["name"])
+            graph.append({
+                "id": midlevel_id,
+                "name": topic,
+                "description": topic,
+                "numberOfHours": hours,
+                "isPartOf": [toplevel_id],
+                "hasPart": midlevel_parts
+            })
+        topic, hours = split_hours(toplevel)
+        graph.append({
+            "id": toplevel_id,
+            "name": topic,
+            "description": topic,
+            "numberOfHours": hours,
+            "isPartOf": [],
+            "hasPart": toplevel_parts
+        })
+    return {"graph": graph}
+
+def split_hours(heading):
+     m = re.fullmatch("(.+)\s\(ca\.\s([0-9]+)\sStd\.\)", heading)
+     assert m is not None
+     return m.groups()
+
 
 if __name__ == "__main__":
     import sys

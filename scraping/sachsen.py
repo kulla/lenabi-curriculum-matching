@@ -55,7 +55,31 @@ def print_tree(t, depth = 0):
     for c in t["children"]:
         print_tree(c, depth + 1)
 
+def tree_to_graph(tree, result=[], next_id=[0], partof=[]):
+    level_id = next_id[0]
+    next_id[0] += 1
+    parts = []
+    topic = tree.get("name")
+    if topic is None:
+        tree.get("text")
+
+    for child in tree["children"]:
+        parts.append(tree_to_graph(child, result, next_id, partof=[level_id]))
+
+    result.append({
+        "id": level_id,
+        "name": topic,
+        "description": topic,
+        "numberOfHours": 0,
+        "isPartOf": partof,
+        "hasPart": parts
+    })
+    return level_id
+
 if __name__ == "__main__":
     tree = parseHTML(sys.stdin)
+    nodes = []
+    tree_to_graph(tree, nodes)
+    graph = {"graph": nodes}
     #print_tree(tree)
-    json.dump(tree, sys.stdout)
+    json.dump(graph, sys.stdout)
